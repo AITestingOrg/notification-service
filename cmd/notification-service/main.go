@@ -3,7 +3,6 @@ package main
 import (
 	"log"
 
-	"github.com/streadway/amqp"
 	"time"
 	"net/http"
 	"os"
@@ -52,78 +51,8 @@ func main() {
 	}
 
 
-
-	conn, err := amqp.Dial("amqp://guest:guest@" + os.Getenv("RABBIT_HOST") + ":5672/")
-	failOnError(err, "Failed to connect to RabbitMQ")
-	defer conn.Close()
-
-	ch, err := conn.Channel()
-	failOnError(err, "Failed to open a channel")
-	defer ch.Close()
-
-	log.Print("Declaring RabbitMQ exchange...")
-	err = ch.ExchangeDeclare(
-		"notification-eventbus", //name
-		"direct",                //kind
-		false,                   //durable
-		false,                   //autoDelete
-		false,                   //internal
-		false,                   //noWait
-		nil,                     //args
-	)
-	failOnError(err, "Failed to declare an exchange")
-	log.Println("done")
-
-	log.Print("Declaring notification queue...")
-	messagesQueue, err := ch.QueueDeclare(
-		"notification-service", // name
-		false,                  // durable
-		false,                  // delete when unused
-		false,                  // exclusive
-		false,                  // no-wait
-		nil,                    // arguments
-	)
-	failOnError(err, "Failed to declare a queue")
-	log.Println("done")
-
-	log.Print("Binding to queue to exchange...")
-	err = ch.QueueBind(
-		"notification-service",  // name
-		"#",                     // key
-		"notification-eventbus", // exchange
-		false,                   // noWait
-		nil,                     // args
-	)
-	failOnError(err, "Failed to bind the queue")
-	log.Println("done")
-	//forever := make(chan bool)
-
 	server := sse.New()
 	server.CreateStream("messages")
-
-	go func() {
-		log.Println("Listening on RabbitMQ!")
-		for true {
-			msgs, err := ch.Consume(
-				messagesQueue.Name, // queue
-				"",                 // consumer
-				true,               // auto-ack
-				false,              // exclusive
-				false,              // no-local
-				false,              // no-wait
-				nil,                // args
-			)
-			failOnError(err, "Failed to register a consumer")
-
-			for d := range msgs {
-				server.Publish("messages", &sse.Event{
-					Data:  []byte("ping"),
-					Event: []byte("string"),
-				})
-				log.Printf("Received a message: %s", d.Body)
-			}
-		}
-	}()
 
 	go func() {
 		server.Publish("messages", &sse.Event{
