@@ -1,0 +1,43 @@
+language: go
+
+go:
+- '1.10'
+
+services:
+- docker
+
+before_install:
+- echo "before the install"
+- echo "Testing Docker Hub credentials"
+- docker -v
+- docker login -u=$DOCKER_USERNAME -p=$DOCKER_PASSWORD
+- echo "Docker Hub credentials are working"
+- chmod +x .travis.gofmt.sh
+
+script:
+- echo "running the script"
+- go build ./...
+- docker-compose up --build -d
+- go get github.com/r3labs/sse
+- ./.travis.gofmt.sh
+- go get github.com/stretchr/testify/assert && go get github.com/jarcoal/httpmock && go test -v -tags unit -cover ./...
+- notification_id=$(docker ps -aqf "name=notificationservice_notificationservice_1")
+# - docker exec -it $notification_id bash -c "go get github.com/stretchr/testify/assert && cd tests && go test -v -tags integration"
+
+after_success:
+- export ACTUAL_BRANCH=$(if [ "$TRAVIS_PULL_REQUEST" == "false" ]; then echo $TRAVIS_BRANCH;
+  else echo $TRAVIS_PULL_REQUEST_BRANCH; fi)
+- echo "Test Success - BranchActual($ACTUAL_BRANCH) Pull Request($TRAVIS_PULL_REQUEST)
+  Tag($TRAVIS_TAG) PR($TRAVIS_PULL_REQUEST) Build($TRAVIS_BUILD_NUMBER)"
+- if [[ "$ACTUAL_BRANCH" == "master" ]]; then echo -e "Push Container to Docker Hub";
+  fi
+- docker login -u=$DOCKER_USERNAME -p=$DOCKER_PASSWORD
+- export REPO=aista/notification-service
+- export TAG=`if [ "$ACTUAL_BRANCH" == "master" ]; then echo "latest";else echo "";
+  fi`
+- docker build -f Dockerfile -t $REPO:$TAG .
+- docker push $REPO
+env:
+  global:
+  - secure: iGWAf5nhj3Gyc5i9yxWjHEEipwLg9v+HtbNLWfIibuWdqt18uQLkcRcVo0kB/F5T+drjECBzHjuiyCy/FkN6jCx+WrkgsLzap0xuMaoSyGCjOxBMKzfKxw53r8H2uDN8ua8I7nJPYdGiOpM0hNnd2pL7NB/EvumWFSCyNdplTalPuhI8MdXtKjhTqHI/immXKq6zNW+gy0igf/A/WjC3I6VhkV8iXbQm7QWKgMCtt28PLNlTjI85A76rbEg2LyAiRzMnmRFdKS57SwNkg+l4MyDD0/Lr8x7M6lDyDuYwme1AeTepz76r9MR4cMf9n6TMSJNRgKvm4O+suaxDkb6/CzTU8uhmZU1xSiRKJRpyXtL8uVWD4v1qbfAA/DBFs3JKJzsnCmu3mCHuUlHTSPsvC7VqpjVLbGan177vLGFZf04lRFJC2m7flOVh0lJup7ovJEBkilxJ58kO2YLjyqZ2jvhyoOUjt0B5W/Gl/oVX5A7qobvci1brG0w7tcxfsM6B/bMxPwl145kw1Qps0ckfwZiOAD0WBRk9U+jKhpJ4Y9CVawcwBDFpBFi/IcUwcH8xywckaP6DHQKYKvM8G7UCsRQ5P17irVEQ/So93glZ5Jst0FtJzfcO//PT3mYcSjhdtSPIxxzd0ZR12uCHchGIQcAhmjNsXLmM2uiJUJNuxRA=
+  - secure: cCwRp9D+Xs2/wpHAccvapmsOs7e8aArmUYXDQjQFrc3ECACxFfR/0Ri5viS5HCt+Dj2qJ04qvjevn51PPswoFT7Hd3G73RMqyt8Wx3eFl7muCbVz0RoMqZlgfZfQmH9JZAiI9FwbOuWQz/ztUrltfxfLpfa6/sx7O3dVCO08iT+sMy+Fizjwd7QQqFvbNEfqWRP2ZZKPy2uU0v/aCMnh8BFeSTjEqzrJ8pHeTg2QEfj9kQGBdlJ/we2sMbgk1UI87ER3RyvcadVK0dQACNABsTmGXR05LdRjuv5Rbe1BugRzIQTTTrzmep78WYdw74lIqKShpaZedumkSCjLl4uSl6owtcCEPllGfnQR68gZgFRxfdOiuy4Hwti7lbNmClUP5zU0UahPUaEM4h6msmnB/TNeT1WDFwk6AaAO/V+W9EyukD9uNTx2aimiBwaH9G3fNBlyVA3rDVaFW3nHMBNsHQ6PyETs3uDQcAiwck4Hm55//aBFyp4EH1jtvddccIaR7xZ1jIxAl6dqB23EcxMFPy64rHAErV76EcXjW2HB13nBUJV3en4XSlzVdTNOa/ZmF95Dsp1Nhqq7xD6x1Y52kpMuR5PfB36CrhD7iWleviAFXK1arRLou5EojSvDYoZjWWVeyEKfqr5MCzeRQ//zD170LKtlu9E+v12txo7AIj4=

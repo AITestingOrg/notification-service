@@ -1,0 +1,21 @@
+version: '3'
+services:
+  discoveryservice:
+    image: aista/eureka
+    ports:
+      - "8761:8761"
+  notificationservice:
+    depends_on:
+      - discoveryservice
+    build: ./
+    command: ./notification-service
+    ports:
+      - "32700:32700"
+    environment:
+      - EUREKA_SERVER=discoveryservice
+      - RABBIT_HOST=rabbitmq
+  rabbitmq:
+    image: rabbitmq:management
+    ports:
+      - "5672:5672"
+      - "15672:15672"
