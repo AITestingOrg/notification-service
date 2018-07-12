@@ -59,9 +59,6 @@ func main() {
 				nil,                // args
 			)
 			failOnError(err, "Failed to register a consumer")
-			if msgs == nil {
-
-			}
 			for m := range msgs {
 				server.CreateStream(m.UserId)
 				log.Printf("Creating stream %s", m.UserId)
