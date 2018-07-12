@@ -7,7 +7,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func channelConnection_test(t *testing.T) {
+func TestChannelConnection(t *testing.T) {
 
 	// Arrange
 	amqpConnection, _ := rabbitMQ.RabbitDialConnection()
