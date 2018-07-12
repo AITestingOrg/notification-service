@@ -17,7 +17,6 @@ func QueueDeclarations (ch *amqp.Channel, err error) (amqp.Queue, error) {
 		false,                   //noWait
 		nil,                     //args
 	)
-	//failOnError(err, "Failed to declare an exchange")
 	if err != nil {
 		var nilQueue amqp.Queue
 		return nilQueue, errors.Wrap(err, "Failed to declare an exchange")
@@ -33,7 +32,6 @@ func QueueDeclarations (ch *amqp.Channel, err error) (amqp.Queue, error) {
 		false,                  // no-wait
 		nil,                    // arguments
 	)
-	//failOnError(err, "Failed to declare a queue")
 	if err != nil {
 		var nilQueue amqp.Queue
 		return nilQueue, errors.Wrap(err, "Failed to declare a queue")
@@ -48,7 +46,6 @@ func QueueDeclarations (ch *amqp.Channel, err error) (amqp.Queue, error) {
 		false,                   // noWait
 		nil,                     // args
 	)
-	//failOnError(err, "Failed to bind the queue")
 	if err != nil {
 		var nilQueue amqp.Queue
 		return nilQueue, errors.Wrap(err, "Failed to bind the queue")

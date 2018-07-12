@@ -7,6 +7,5 @@ import (
 func CreateServer(id string) *Server {
 	server := New()
 	server.CreateStream(id)
-
 	return server
 }

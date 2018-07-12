@@ -2,7 +2,6 @@ package main
 
 import (
 	"log"
-
 	"net/http"
 	"os"
 	"fmt"
@@ -18,7 +17,6 @@ func failOnError(err error, msg string) {
 	}
 }
 
-
 func main() {
 	log.Println("Checking Eureka")
 	localRun := false
@@ -33,66 +31,20 @@ func main() {
 		}
 	}
 
-	//conn, err := amqp.Dial("amqp://guest:guest@" + os.Getenv("RABBIT_HOST") + ":5672/")
-	//failOnError(err, "Failed to connect to RabbitMQ")
-	//defer conn.Close()
-
 	log.Println("Connecting to RabbitMQ")
 	conn, err := rabbitMQ.RabbitDialConnection()
 	failOnError(err, "Failed to connect to RabbitMQ")
 	defer conn.Close()
 
-
-	//ch, err := conn.Channel()
-	//failOnError(err, "Failed to open a channel")
-	//defer ch.Close()
 	log.Println("Opening a channel")
 	ch, err := rabbitMQ.ChannelConnection(conn)
 	failOnError(err, "Failed to open a channel")
 	defer ch.Close()
 
-	//log.Print("Declaring RabbitMQ exchange...")
-	//err = ch.ExchangeDeclare(
-	//	"notification-eventbus", //name
-	//	"direct",                //kind
-	//	false,                   //durable
-	//	false,                   //autoDelete
-	//	false,                   //internal
-	//	false,                   //noWait
-	//	nil,                     //args
-	//)
-	//failOnError(err, "Failed to declare an exchange")
-	//log.Println("done")
-	//
-	//log.Print("Declaring notification queue...")
-	//messagesQueue, err := ch.QueueDeclare(
-	//	"notification-service", // name
-	//	false,                  // durable
-	//	false,                  // delete when unused
-	//	false,                  // exclusive
-	//	false,                  // no-wait
-	//	nil,                    // arguments
-	//)
-	//failOnError(err, "Failed to declare a queue")
-	//log.Println("done")
-	//
-	//log.Print("Binding to queue to exchange...")
-	//err = ch.QueueBind(
-	//	"notification-service",  // name
-	//	"#",                     // key
-	//	"notification-eventbus", // exchange
-	//	false,                   // noWait
-	//	nil,                     // args
-	//)
-	//failOnError(err, "Failed to bind the queue")
-	//log.Println("done")
-	///////////forever := make(chan bool)
-
+	log.Println("Declaring queues and exchanges")
 	messagesQueue, err := rabbitMQ.QueueDeclarations(ch, err)
 
-	//server := sse.New()
-	//server.CreateStream("messages")
-
+	log.Println("Creating server")
 	server := rabbitMQ.CreateServer("messages")
 
 	go func() {
@@ -125,8 +77,6 @@ func main() {
 			Event: []byte("1"),
 		})
 	}()
-
-
 
 	// Create a new Mux and set the handler
 	mux := http.NewServeMux()
