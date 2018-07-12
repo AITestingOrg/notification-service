@@ -9,7 +9,7 @@ import (
 func QueueDeclarations (ch *amqp.Channel, err error) (amqp.Queue, error) {
 	log.Print("Declaring RabbitMQ exchange...")
 	err = ch.ExchangeDeclare(
-		"notification-eventbus", //name
+		"notification.exchange.notification", //name
 		"direct",                //kind
 		false,                   //durable
 		false,                   //autoDelete
@@ -25,7 +25,7 @@ func QueueDeclarations (ch *amqp.Channel, err error) (amqp.Queue, error) {
 
 	log.Print("Declaring notification queue...")
 	messagesQueue, err := ch.QueueDeclare(
-		"notification-service", // name
+		"notification.queue.notification", // name
 		false,                  // durable
 		false,                  // delete when unused
 		false,                  // exclusive
@@ -40,11 +40,11 @@ func QueueDeclarations (ch *amqp.Channel, err error) (amqp.Queue, error) {
 
 	log.Print("Binding to queue to exchange...")
 	err = ch.QueueBind(
-		"notification-service",  // name
-		"#",                     // key
-		"notification-eventbus", // exchange
-		false,                   // noWait
-		nil,                     // args
+		"notification.queue.notification",        // name
+		"#",                                       // key
+		"notification.exchange.notification", // exchange
+		false,                                  // noWait
+		nil,                                      // args
 	)
 	if err != nil {
 		var nilQueue amqp.Queue

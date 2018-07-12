@@ -5,7 +5,6 @@ import (
 	"net/http"
 	"os"
 	"fmt"
-
 	"github.com/AITestingOrg/notification-service/internal/rabbitMQ"
 	"github.com/r3labs/sse"
 	"github.com/AITestingOrg/notification-service/internal/Eureka"
@@ -60,22 +59,19 @@ func main() {
 				nil,                // args
 			)
 			failOnError(err, "Failed to register a consumer")
+			if msgs == nil {
 
-			for d := range msgs {
-				server.Publish("messages", &sse.Event{
-					Data:  []byte("ping"),
-					Event: []byte("string"),
+			}
+			for m := range msgs {
+				server.CreateStream(m.UserId)
+				log.Printf("Creating stream %s", m.UserId)
+
+				server.Publish(m.UserId, &sse.Event{
+					Data:  m.Body,
 				})
-				log.Printf("Received a message: %s", d.Body)
+				log.Printf("Sending data %s to %s", m.Body, m.UserId)
 			}
 		}
-	}()
-
-	go func() {
-		server.Publish("messages", &sse.Event{
-			Data:  []byte("beat"),
-			Event: []byte("1"),
-		})
 	}()
 
 	// Create a new Mux and set the handler
