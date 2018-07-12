@@ -7,10 +7,9 @@ import (
 	"os"
 	"fmt"
 
-	"github.com/streadway/amqp"
 	"github.com/AITestingOrg/notification-service/internal/rabbitMQ"
 	"github.com/r3labs/sse"
-
+	"github.com/AITestingOrg/notification-service/internal/Eureka"
 )
 
 func failOnError(err error, msg string) {
@@ -21,6 +20,7 @@ func failOnError(err error, msg string) {
 
 
 func main() {
+	log.Println("Checking Eureka")
 	localRun := false
 	if os.Getenv("EUREKA_SERVER") == "" {
 		localRun = true
@@ -29,59 +29,71 @@ func main() {
 		eurekaUp := false
 		log.Println("Waiting for Eureka...")
 		for eurekaUp != true {
-			eurekaUp = rabbitMQ.CheckEurekaService(eurekaUp)
+			eurekaUp = Eureka.CheckEurekaService(eurekaUp)
 		}
 	}
 
+	//conn, err := amqp.Dial("amqp://guest:guest@" + os.Getenv("RABBIT_HOST") + ":5672/")
+	//failOnError(err, "Failed to connect to RabbitMQ")
+	//defer conn.Close()
 
-
-	conn, err := amqp.Dial("amqp://guest:guest@" + os.Getenv("RABBIT_HOST") + ":5672/")
+	log.Println("Connecting to RabbitMQ")
+	conn, err := rabbitMQ.RabbitDialConnection()
 	failOnError(err, "Failed to connect to RabbitMQ")
 	defer conn.Close()
 
-	ch, err := conn.Channel()
+
+	//ch, err := conn.Channel()
+	//failOnError(err, "Failed to open a channel")
+	//defer ch.Close()
+	log.Println("Opening a channel")
+	ch, err := rabbitMQ.ChannelConnection(conn)
 	failOnError(err, "Failed to open a channel")
 	defer ch.Close()
 
-	log.Print("Declaring RabbitMQ exchange...")
-	err = ch.ExchangeDeclare(
-		"notification-eventbus", //name
-		"direct",                //kind
-		false,                   //durable
-		false,                   //autoDelete
-		false,                   //internal
-		false,                   //noWait
-		nil,                     //args
-	)
-	failOnError(err, "Failed to declare an exchange")
-	log.Println("done")
+	//log.Print("Declaring RabbitMQ exchange...")
+	//err = ch.ExchangeDeclare(
+	//	"notification-eventbus", //name
+	//	"direct",                //kind
+	//	false,                   //durable
+	//	false,                   //autoDelete
+	//	false,                   //internal
+	//	false,                   //noWait
+	//	nil,                     //args
+	//)
+	//failOnError(err, "Failed to declare an exchange")
+	//log.Println("done")
+	//
+	//log.Print("Declaring notification queue...")
+	//messagesQueue, err := ch.QueueDeclare(
+	//	"notification-service", // name
+	//	false,                  // durable
+	//	false,                  // delete when unused
+	//	false,                  // exclusive
+	//	false,                  // no-wait
+	//	nil,                    // arguments
+	//)
+	//failOnError(err, "Failed to declare a queue")
+	//log.Println("done")
+	//
+	//log.Print("Binding to queue to exchange...")
+	//err = ch.QueueBind(
+	//	"notification-service",  // name
+	//	"#",                     // key
+	//	"notification-eventbus", // exchange
+	//	false,                   // noWait
+	//	nil,                     // args
+	//)
+	//failOnError(err, "Failed to bind the queue")
+	//log.Println("done")
+	///////////forever := make(chan bool)
 
-	log.Print("Declaring notification queue...")
-	messagesQueue, err := ch.QueueDeclare(
-		"notification-service", // name
-		false,                  // durable
-		false,                  // delete when unused
-		false,                  // exclusive
-		false,                  // no-wait
-		nil,                    // arguments
-	)
-	failOnError(err, "Failed to declare a queue")
-	log.Println("done")
+	messagesQueue, err := rabbitMQ.QueueDeclarations(ch, err)
 
-	log.Print("Binding to queue to exchange...")
-	err = ch.QueueBind(
-		"notification-service",  // name
-		"#",                     // key
-		"notification-eventbus", // exchange
-		false,                   // noWait
-		nil,                     // args
-	)
-	failOnError(err, "Failed to bind the queue")
-	log.Println("done")
-	//forever := make(chan bool)
+	//server := sse.New()
+	//server.CreateStream("messages")
 
-	server := sse.New()
-	server.CreateStream("messages")
+	server := rabbitMQ.CreateServer("messages")
 
 	go func() {
 		log.Println("Listening on RabbitMQ!")
@@ -126,7 +138,7 @@ func main() {
 			http.NotFound(w, req)
 			return
 		}
-		fmt.Fprintf(w, "You shoulfd try /events?stream=<stream name>")
+		fmt.Fprintf(w, "You should try /events?stream=<stream name>")
 	})
 	log.Println("Listening on HTTP")
 	log.Fatal(http.ListenAndServe(":32700", mux))
