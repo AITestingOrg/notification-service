@@ -21,7 +21,7 @@ func CheckEurekaService() bool {
 		log.Printf("No response from eureka, retrying...")
 		return false
 	}
-	if response.Status != "204 No Content" {
+	if response.StatusCode != 204 {
 		log.Printf("Success, eureka was found!")
 		return true
 	}
