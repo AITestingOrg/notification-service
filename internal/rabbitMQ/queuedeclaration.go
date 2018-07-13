@@ -2,6 +2,7 @@ package rabbitMQ
 
 import (
 	"log"
+
 	"github.com/streadway/amqp"
 	"github.com/pkg/errors"
 )
@@ -10,8 +11,8 @@ func QueueDeclarations (ch *amqp.Channel, err error) (amqp.Queue, error) {
 	log.Print("Declaring RabbitMQ exchange...")
 	err = ch.ExchangeDeclare(
 		"notification.exchange.notification", //name
-		"direct",                //kind
-		false,                   //durable
+		"topic",                //kind
+		true,                   //durable
 		false,                   //autoDelete
 		false,                   //internal
 		false,                   //noWait

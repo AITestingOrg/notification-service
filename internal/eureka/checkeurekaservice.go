@@ -4,7 +4,6 @@ import (
 	"time"
 	"log"
 	"net/http"
-
 )
 
 func CheckEurekaService() bool {
