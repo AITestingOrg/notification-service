@@ -35,7 +35,7 @@ func TestCheckEurekaService_HappyPath(t *testing.T) {
 
 	split := strings.Split(buf.String(), "\n")
 	assert.Equal(t, 3, len(split))
-	assert.Equal(t, "Sending request to eureka, waiting for response...", split[0][20:len(split[0])]) // Starting at 20 removes the data and time from the log statement
+	assert.Equal(t, "Sending request to eureka, waiting for response...", split[0][20:len(split[0])]) // Starting at 20 removes the date and time from the log statement
 	assert.Equal(t, "Success, eureka was found!", split[1][20:len(split[1])])
 	assert.Equal(t, "", split[2])
 }
