@@ -51,7 +51,6 @@ func TestCheckEurekaService_NoResponse(t *testing.T) {
 	// Act
 	result := eureka.CheckEurekaService()
 
-
 	// Assert
 	assert.Equal(t, false, result)
 
