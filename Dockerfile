@@ -6,7 +6,7 @@ WORKDIR /go/src/github.com/AITestingOrg/notification-service
 
 COPY . .
 
-RUN go get -v ./...
+RUN go get -v ./cmd/notification-service
 RUN go build ./cmd/notification-service
 RUN export PATH=$PATH:/go/bin
 EXPOSE 32700
