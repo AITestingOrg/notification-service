@@ -1,10 +1,10 @@
 package rabbitMQ
 
 import(
-	"github.com/NeowayLabs/wabbit"
+	"github.com/streadway/amqp"
 )
 
-func ChannelConnection(conn wabbit.Conn) (wabbit.Channel, error) {
+func ChannelConnection(conn *amqp.Connection) (*amqp.Channel, error) {
 	ch, err := conn.Channel()
 	return ch, err
 }

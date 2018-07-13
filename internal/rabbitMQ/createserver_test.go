@@ -1,13 +1,12 @@
 // +build unit
 
-package test
+package rabbitMQ
 
 import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/r3labs/sse"
-	"github.com/AITestingOrg/notification-service/internal/rabbitMQ"
 )
 
 func TestCreateServer(t *testing.T) {
@@ -15,7 +14,7 @@ func TestCreateServer(t *testing.T) {
 	var str string = "HappyServer"
 
 	// Act
-	server := rabbitMQ.CreateServer(str)
+	server := CreateServer(str)
 
 	// Assert
 	assert.IsType(t, sse.New(), server)

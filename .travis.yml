@@ -16,7 +16,7 @@ before_install:
 
 script:
 - echo "running the script"
-- go build ./cmd/notification-service
+- go build ./...
 - docker-compose up --build -d
 - go get github.com/r3labs/sse
 - ./.travis.gofmt.sh

@@ -5,12 +5,9 @@ import (
 	"net/http"
 	"os"
 	"fmt"
-
-
 	"github.com/AITestingOrg/notification-service/internal/rabbitMQ"
 	"github.com/r3labs/sse"
 	"github.com/AITestingOrg/notification-service/internal/eureka"
-	"github.com/NeowayLabs/wabbit"
 )
 
 func failOnError(err error, msg string) {
@@ -53,20 +50,23 @@ func main() {
 		log.Println("Listening on RabbitMQ!")
 		for true {
 			msgs, err := ch.Consume(
-				messagesQueue.Name(), // queue
+				messagesQueue.Name, // queue
 				"",                 // consumer
-				wabbit.Option{"autoAck": true, "exclusive": false, "noLocal": false, "noWait": false},
-
+				true,               // auto-ack
+				false,              // exclusive
+				false,              // no-local
+				false,              // no-wait
+				nil,                // args
 			)
 			failOnError(err, "Failed to register a consumer")
 			for m := range msgs {
-				server.CreateStream(m.ConsumerTag())
-				log.Printf("Creating stream %s", m.ConsumerTag())
+				server.CreateStream(m.UserId)
+				log.Printf("Creating stream %s", m.UserId)
 
-				server.Publish(m.ConsumerTag(), &sse.Event{
-					Data:  m.Body(),
+				server.Publish(m.UserId, &sse.Event{
+					Data:  m.Body,
 				})
-				log.Printf("Sending data %s to %s", m.Body(), m.ConsumerTag())
+				log.Printf("Sending data %s to %s", m.Body, m.UserId)
 			}
 		}
 	}()

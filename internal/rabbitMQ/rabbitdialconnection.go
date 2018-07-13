@@ -1,13 +1,11 @@
 package rabbitMQ
 
 import (
+	"github.com/streadway/amqp"
 	"os"
-
-	"github.com/NeowayLabs/wabbit"
-	"github.com/NeowayLabs/wabbit/amqp"
 )
 
-func RabbitDialConnection() (wabbit.Conn, error) {
+func RabbitDialConnection() (*amqp.Connection, error) {
 
 	conn, err := amqp.Dial("amqp://guest:guest@" + os.Getenv("RABBIT_HOST") + ":5672/")
 	return conn, err
