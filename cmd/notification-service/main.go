@@ -8,6 +8,8 @@ import (
 	"github.com/AITestingOrg/notification-service/internal/rabbitMQ"
 	"github.com/r3labs/sse"
 	"github.com/AITestingOrg/notification-service/internal/eureka"
+	"github.com/AITestingOrg/notification-service/internal/model"
+	"encoding/json"
 )
 
 func failOnError(err error, msg string) {
@@ -60,13 +62,24 @@ func main() {
 			)
 			failOnError(err, "Failed to register a consumer")
 			for m := range msgs {
-				server.CreateStream(m.UserId)
-				log.Printf("Creating stream %s", m.UserId)
+				var message model.Message
+				message.Data = m.Body
+				message.UserId = m.UserId
 
-				server.Publish(m.UserId, &sse.Event{
-					Data:  m.Body,
+				server.CreateStream(m.RoutingKey)
+				log.Printf("Creating stream %s", m.RoutingKey)
+
+				data, err := json.Marshal(message)
+
+				if err != nil {
+					log.Printf("Parsing object into JSON failed")
+					return
+				}
+
+				server.Publish(m.RoutingKey, &sse.Event{
+					Data:  data,
 				})
-				log.Printf("Sending data %s to %s", m.Body, m.UserId)
+				log.Printf("Sending data %s to %s", string(data), m.RoutingKey)
 			}
 		}
 	}()

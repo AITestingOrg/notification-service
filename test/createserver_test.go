@@ -1,6 +1,6 @@
 // +build unit
 
-package rabbitMQ
+package test
 
 import (
 	"testing"
