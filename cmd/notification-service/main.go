@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"github.com/AITestingOrg/notification-service/internal/rabbitMQ"
 	"github.com/r3labs/sse"
-	"github.com/AITestingOrg/notification-service/internal/Eureka"
+	"github.com/AITestingOrg/notification-service/internal/eureka"
 )
 
 func failOnError(err error, msg string) {
@@ -17,16 +17,16 @@ func failOnError(err error, msg string) {
 }
 
 func main() {
-	log.Println("Checking Eureka")
+	log.Println("Checking eureka")
 	localRun := false
 	if os.Getenv("EUREKA_SERVER") == "" {
 		localRun = true
 	}
 	if !localRun {
 		eurekaUp := false
-		log.Println("Waiting for Eureka...")
+		log.Println("Waiting for eureka...")
 		for eurekaUp != true {
-			eurekaUp = Eureka.CheckEurekaService(eurekaUp)
+			eurekaUp = eureka.CheckEurekaService()
 		}
 	}
 

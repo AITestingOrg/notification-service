@@ -1,3 +1,5 @@
+//+build unit
+
 package test
 
 import (
@@ -19,5 +21,4 @@ func TestChannelConnection(t *testing.T) {
 	// Assert
 	assert.Equal(t, connection, actual_connection)
 	assert.Equal(t, expected_err, actual_err)
-
 }
