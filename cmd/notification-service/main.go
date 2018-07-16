@@ -5,13 +5,18 @@ import (
 	"net/http"
 	"os"
 	"fmt"
-
 	"github.com/AITestingOrg/notification-service/internal/rabbitMQ"
 	"github.com/AITestingOrg/notification-service/internal/eureka"
 
 	"github.com/r3labs/sse"
 	"github.com/streadway/amqp"
+	"encoding/json"
 )
+
+type Message struct {
+	RoutingKey string
+	Body []byte
+}
 
 func main() {
 	log.Println("Checking eureka")
@@ -34,13 +39,20 @@ func main() {
 		rabbitMQ.InitializeConsumer(func(m amqp.Delivery){
 			log.Printf("Received message")
 
-			server.CreateStream(m.RoutingKey)
-			log.Printf("Creating stream %s", m.RoutingKey)
+			data, err := json.Marshal(Message{m.RoutingKey, m.Body})
+
+			if err != nil {
+				log.Printf("Parsing json failed")
+				return
+			}
+
+			server.CreateStream(m.UserId)
+			log.Printf("Creating stream %s", m.UserId)
 
 			server.Publish(m.RoutingKey, &sse.Event{
-				Data:  m.Body,
+				Data:  data,
 			})
-			log.Printf("Sending data %s to %s", m.Body, m.RoutingKey)
+			log.Printf("Sending data %s to %s", data, m.UserId)
 		})
 	}()
 
