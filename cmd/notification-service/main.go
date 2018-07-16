@@ -4,14 +4,13 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"encoding/json"
 	"fmt"
 	"github.com/AITestingOrg/notification-service/internal/rabbitMQ"
 	"github.com/AITestingOrg/notification-service/internal/eureka"
 	"github.com/AITestingOrg/notification-service/internal/model"
-
 	"github.com/r3labs/sse"
 	"github.com/streadway/amqp"
-	"encoding/json"
 )
 
 func main() {
@@ -33,22 +32,38 @@ func main() {
 
 	go func() {
 		rabbitMQ.InitializeConsumer(func(m amqp.Delivery){
-			log.Printf("Received message")
+			log.Printf("Received a message")
+			jsonBody := string(m.Body)
 
-			data, err := json.Marshal(model.Message{RoutingKey: m.RoutingKey, Body: m.Body})
-
+			var objMap map[string]*json.RawMessage
+			err := json.Unmarshal(m.Body, &objMap)
 			if err != nil {
-				log.Printf("Parsing json failed")
+				log.Printf("Can't unmarshal message \"%s\", are you sure its JSON? Error: %s", jsonBody, err.Error())
+			}
+
+			var userId string
+			err = json.Unmarshal(*objMap["userId"], &userId)
+			if err != nil {
+				log.Printf("Extracting userId from JSON-body failed...refusing to forward message. Error: %s", err.Error())
 				return
 			}
 
-			server.CreateStream(m.UserId)
-			log.Printf("Creating stream %s", m.UserId)
+			data, err := json.Marshal(model.Message { RoutingKey: m.RoutingKey, Body: objMap })
 
-			server.Publish(m.RoutingKey, &sse.Event{
+			if err != nil {
+				log.Printf("Remarshaling JSON notification failed. Error: %s", err.Error())
+				return
+			}
+
+			if !server.StreamExists(userId) {
+				log.Printf("Creating new stream: %s", userId)
+				server.CreateStream(userId)
+			}
+
+			server.Publish(userId, &sse.Event {
 				Data:  data,
 			})
-			log.Printf("Sending data %s to %s", data, m.UserId)
+			log.Printf("Sending data '%s' to '%s'", data, userId)
 		})
 	}()
 
