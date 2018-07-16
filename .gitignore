@@ -1,2 +1,4 @@
 /notification-service
 .DS_Store
+.idea
+*.iml

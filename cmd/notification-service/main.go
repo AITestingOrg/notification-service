@@ -2,66 +2,70 @@ package main
 
 import (
 	"log"
-
-	"time"
 	"net/http"
 	"os"
-	"github.com/r3labs/sse"
+	"encoding/json"
 	"fmt"
+	"github.com/AITestingOrg/notification-service/internal/rabbitMQ"
+	"github.com/AITestingOrg/notification-service/internal/eureka"
+	"github.com/AITestingOrg/notification-service/internal/model"
+	"github.com/r3labs/sse"
+	"github.com/streadway/amqp"
 )
 
-func failOnError(err error, msg string) {
-	if err != nil {
-		log.Fatalf("%s: %s", msg, err)
-	}
-}
-
-func checkEurekaService(eurekaUp bool) bool {
-	duration := time.Duration(15) * time.Second
-	time.Sleep(duration)
-	url := "http://discoveryservice:8761/eureka/"
-	log.Println("Sending request to Eureka, waiting for response...")
-	request, _ := http.NewRequest("GET", url, nil)
-	request.Header.Set("Content-Type", "application/json")
-
-	client := &http.Client{}
-	response, responseErr := client.Do(request)
-	if responseErr != nil {
-		log.Printf("No response from Eureka, retrying...")
-		return false
-	}
-	if response.Status != "204 No Content" {
-		log.Printf("Success, Eureka was found!")
-		return true
-	}
-	return false
-}
-
 func main() {
+	log.Println("Checking eureka")
 	localRun := false
 	if os.Getenv("EUREKA_SERVER") == "" {
 		localRun = true
 	}
 	if !localRun {
 		eurekaUp := false
-		log.Println("Waiting for Eureka...")
+		log.Println("Waiting for eureka...")
 		for eurekaUp != true {
-			eurekaUp = checkEurekaService(eurekaUp)
+			eurekaUp = eureka.CheckEurekaService()
 		}
 	}
 
-
-	server := sse.New()
-	server.CreateStream("messages")
+	log.Println("Creating server")
+	server := rabbitMQ.CreateServer("messages")
 
 	go func() {
-		server.Publish("messages", &sse.Event{
-			Data:  []byte("beat"),
-			Event: []byte("1"),
+		rabbitMQ.InitializeConsumer(func(m amqp.Delivery){
+			log.Printf("Received a message")
+			jsonBody := string(m.Body)
+
+			var objMap map[string]*json.RawMessage
+			err := json.Unmarshal(m.Body, &objMap)
+			if err != nil {
+				log.Printf("Can't unmarshal message \"%s\", are you sure its JSON? Error: %s", jsonBody, err.Error())
+			}
+
+			var userId string
+			err = json.Unmarshal(*objMap["userId"], &userId)
+			if err != nil {
+				log.Printf("Extracting userId from JSON-body failed...refusing to forward message. Error: %s", err.Error())
+				return
+			}
+
+			data, err := json.Marshal(model.Message { RoutingKey: m.RoutingKey, Body: objMap })
+
+			if err != nil {
+				log.Printf("Remarshaling JSON notification failed. Error: %s", err.Error())
+				return
+			}
+
+			if !server.StreamExists(userId) {
+				log.Printf("Creating new stream: %s", userId)
+				server.CreateStream(userId)
+			}
+
+			server.Publish(userId, &sse.Event {
+				Data:  data,
+			})
+			log.Printf("Sending data '%s' to '%s'", data, userId)
 		})
 	}()
-
-
 
 	// Create a new Mux and set the handler
 	mux := http.NewServeMux()
@@ -73,7 +77,7 @@ func main() {
 			http.NotFound(w, req)
 			return
 		}
-		fmt.Fprintf(w, "You shoulfd try /events?stream=<stream name>")
+		fmt.Fprintf(w, "You should try /events?stream=<stream name>")
 	})
 	log.Println("Listening on HTTP")
 	log.Fatal(http.ListenAndServe(":32700", mux))

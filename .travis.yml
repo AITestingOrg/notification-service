@@ -22,7 +22,6 @@ script:
 - ./.travis.gofmt.sh
 - go get github.com/stretchr/testify/assert && go get github.com/jarcoal/httpmock && go test -v -tags unit -cover ./...
 - notification_id=$(docker ps -aqf "name=notificationservice_notificationservice_1")
-# - docker exec -it $notification_id bash -c "go get github.com/stretchr/testify/assert && cd tests && go test -v -tags integration"
 
 after_success:
 - export ACTUAL_BRANCH=$(if [ "$TRAVIS_PULL_REQUEST" == "false" ]; then echo $TRAVIS_BRANCH;
