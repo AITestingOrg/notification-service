@@ -7,16 +7,12 @@ import (
 	"fmt"
 	"github.com/AITestingOrg/notification-service/internal/rabbitMQ"
 	"github.com/AITestingOrg/notification-service/internal/eureka"
+	"github.com/AITestingOrg/notification-service/internal/model"
 
 	"github.com/r3labs/sse"
 	"github.com/streadway/amqp"
 	"encoding/json"
 )
-
-type Message struct {
-	RoutingKey string
-	Body []byte
-}
 
 func main() {
 	log.Println("Checking eureka")
@@ -39,7 +35,7 @@ func main() {
 		rabbitMQ.InitializeConsumer(func(m amqp.Delivery){
 			log.Printf("Received message")
 
-			data, err := json.Marshal(Message{m.RoutingKey, m.Body})
+			data, err := json.Marshal(model.Message{RoutingKey: m.RoutingKey, Body: m.Body})
 
 			if err != nil {
 				log.Printf("Parsing json failed")
