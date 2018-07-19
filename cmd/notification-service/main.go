@@ -1,16 +1,16 @@
 package main
 
 import (
+	"encoding/json"
+	"fmt"
+	"github.com/AITestingOrg/notification-service/internal/eureka"
+	"github.com/AITestingOrg/notification-service/internal/model"
+	"github.com/AITestingOrg/notification-service/internal/rabbitMQ"
+	"github.com/r3labs/sse"
+	"github.com/streadway/amqp"
 	"log"
 	"net/http"
 	"os"
-	"encoding/json"
-	"fmt"
-	"github.com/AITestingOrg/notification-service/internal/rabbitMQ"
-	"github.com/AITestingOrg/notification-service/internal/eureka"
-	"github.com/AITestingOrg/notification-service/internal/model"
-	"github.com/r3labs/sse"
-	"github.com/streadway/amqp"
 )
 
 func main() {
@@ -31,7 +31,7 @@ func main() {
 	server := rabbitMQ.CreateServer("messages")
 
 	go func() {
-		rabbitMQ.InitializeConsumer(func(m amqp.Delivery){
+		rabbitMQ.InitializeConsumer(func(m amqp.Delivery) {
 			log.Printf("Received a message")
 			jsonBody := string(m.Body)
 
@@ -48,7 +48,7 @@ func main() {
 				return
 			}
 
-			data, err := json.Marshal(model.Message { RoutingKey: m.RoutingKey, Body: objMap })
+			data, err := json.Marshal(model.Message{RoutingKey: m.RoutingKey, Body: objMap})
 
 			if err != nil {
 				log.Printf("Remarshaling JSON notification failed. Error: %s", err.Error())
@@ -60,8 +60,8 @@ func main() {
 				server.CreateStream(userId)
 			}
 
-			server.Publish(userId, &sse.Event {
-				Data:  data,
+			server.Publish(userId, &sse.Event{
+				Data: data,
 			})
 			log.Printf("Sending data '%s' to '%s'", data, userId)
 		})

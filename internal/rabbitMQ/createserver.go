@@ -1,7 +1,7 @@
 package rabbitMQ
 
 import (
-  "github.com/r3labs/sse"
+	"github.com/r3labs/sse"
 )
 
 func CreateServer(id string) *sse.Server {

@@ -3,15 +3,15 @@
 package test
 
 import (
-	"os"
-	"log"
 	"bytes"
-	"testing"
+	"log"
+	"os"
 	"strings"
+	"testing"
 
-	"gopkg.in/jarcoal/httpmock.v1"
-	"github.com/stretchr/testify/assert"
 	"github.com/AITestingOrg/notification-service/internal/eureka"
+	"github.com/stretchr/testify/assert"
+	"gopkg.in/jarcoal/httpmock.v1"
 )
 
 func TestCheckEurekaService_HappyPath(t *testing.T) {

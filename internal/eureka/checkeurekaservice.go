@@ -1,9 +1,9 @@
 package eureka
 
 import (
-	"time"
 	"log"
 	"net/http"
+	"time"
 )
 
 func CheckEurekaService() bool {
