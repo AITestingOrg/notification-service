@@ -64,6 +64,8 @@ func main() {
 				Data: data,
 			})
 			log.Printf("Sending data '%s' to '%s'", data, userId)
+
+			m.Ack(false)
 		})
 	}()
 
