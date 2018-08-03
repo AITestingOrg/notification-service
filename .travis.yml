@@ -1,11 +1,8 @@
 language: go
-
 go:
 - '1.10'
-
 services:
 - docker
-
 before_install:
 - echo "before the install"
 - echo "Testing Docker Hub credentials"
@@ -13,19 +10,17 @@ before_install:
 - docker login -u=$DOCKER_USERNAME -p=$DOCKER_PASSWORD
 - echo "Docker Hub credentials are working"
 - chmod +x .travis.gofmt.sh
-
 script:
 - echo "running the script"
 - go build ./...
 - docker-compose up --build -d
 - go get github.com/r3labs/sse
 - go get gopkg.in/jarcoal/httpmock.v1
-- ./.travis.gofmt.sh
+- "./.travis.gofmt.sh"
 - go get github.com/stretchr/testify/assert
 - go get github.com/jarcoal/httpmock
 - go test -v -tags unit -cover ./...
 - notification_id=$(docker ps -aqf "name=notificationservice_notificationservice_1")
-
 after_success:
 - export ACTUAL_BRANCH=$(if [ "$TRAVIS_PULL_REQUEST" == "false" ]; then echo $TRAVIS_BRANCH;
   else echo $TRAVIS_PULL_REQUEST_BRANCH; fi)
@@ -43,3 +38,9 @@ env:
   global:
   - secure: NIRI39ooZZTSSoPNb1kICRPnPZ2uV7t6sNPSEjtWeYU4ZCJXuluoloL7p6Br76N85g7Da5DZO5L9dB6MXSqOLvB4M07ha1eV6vQt1TxqATF7vc6uwveaunSSD/cUwtGeb7C3LLz2TGLFaa7+Jyfgh07EZNU1cco6LsRBx34v58ezHV0IvMvtwZQOZVr0SDrvX0UNfBGtfa1uFvm/spFuC+RUi7IWdBQ8xhH0ZfEchjAGb9UIE1yWvZt486rMCtZOvPlcMDIb7f02o20kc2xppeMvJfz1O7JFwB8PMAe05vsfB5pOXyvqQTYCLl4dCvkEkcUq00SyHSj2F20qs60XU8bsVy4jIOw13jU+jr1MiN4CJbqGS3lyr/ORqNmP7dhHBBj+owIMLNzu2rh3yDyLdfv57y+6ocrHXvBHTSf9XAfBLCOHfaq1RnXvgKvgSBOYJGU710UOXSYROyggeP1EVtwYMeei6Vo3C7/DVOlpvyXaamJRp1XhB7/84vhQIwr33uaF1dTaq8jyYv1UH+CN0CcYy4nSox+KwXt8bjieg4YOthtbX2aGaw8/L/dDo85+Hd5GnETDON+DBbNAaeySO/7AJXaE7fQcyKhefQcReCRd5F96LRJtC7G2Crdrqf4QSoOud1VlgQpQae1QZgnYXJLvj6HGHnv4DAFGelJLJeQ=
   - secure: OXUiAXJLQk+W3gTfzYcs7deVJ6MvJsmIQo/XLCvFiK5EZ/n9KdckhCSzHGpC1XySYwsKe1Q3VTtRyNGdgQ3QG2kzg+20Nb+mw3U/+w8A4rXdFA5303CWgbi169jvT0QuNwp0xIrKk5AC9Dr3ykiygdSZDl5g6wrBULTMLNdwWO4Gk4beV8NA0bjnZgRABOpSggyVBLEDBjnTlxUZguVDko7O5czs2NfiEbrZUTiuWGU6cyH+HcbESJcNUxw7mF4w8gMY6MJlDa/zOoYvYdv8oR5h7CzMk/pF5HSYOAvIpJNEomIrEsQ1vzKLNw4KDZDaReAlzmlpzIirEY7kumwq6hrmpcv8Ii9DO09kzvbIVGbj+VI0P5sUMa6zKNcAYbHxdpVsqcS2oT6Fs5jKm7ubKZBN7qM+qCNzHH22Q/Rv5dqzspnCYKsNQrRoKlTH3WgvyEpYyFGSXp1/lF0SapOxsCrSKhI/az2SHayi7p+CCiRD62Kj0CRxFc1bvoi6v9sGPWRSWn0pdSxmMRq5Y3YEypGf9rlZXCLAzMSbY4NSISU8FTlmYu9/YX0lh73mLFVguSfKyu5CGboxHzK+EZkc1V/vF4t+mw2ayXfhROeZFt6laFQ0CqIfFbv83CbcXfFRL3MfMW2IereFZYEOmUDSthDiQcVcJeJsZPqXlK/LK5M=
+notifications:
+  slack:
+    rooms:
+      secure: 0XPRj/CWSU2l/9vQkNXv6yQ33ivbxa1czlBqx4pfBz/ruWMUBTf56rwNafw0511rYsQrRi6BeqBBa7YLuIfuhLpYcfLyLQdh+Njf1EFOz4HE6sNMSuhLKo557WHeeb47hBsSeFKdeD8p0gwTstuE0WyfOt1X7RyixqGQ0BhvUjK4gDXF0UsAKlPnheNRPaCjWt7tcH56vcUmVfD8750wlmWxStIauM+ovKkPUeD22zJeE50+ZPDtwdB74yjSmnGxebG+3wg1GmiU4bM40A79r7V6aWqf8RShMQ18s0UT5AlLvmiAkJTXIjcwHzH7BQH3wMPuiHG3HYNZkMgInREEh2lOhW0t51OJ9Mp2WbBTCe7AlPwTr6MF6dOoPjpTQM/j9IDxNeHZgUDwAsFfWKn637Vg/j64LmttPYPHgHWhiyzaV5jbdLVlJvYRy+9G4VvZ431tzB3YCjc51LXjB20gbdcVlwuXcwlp7HJuGIuWLm9OcsXdH/kpvyG7xZvDlp/SqxgME82TocscQDJ/7kOwVD4cKUMRpyAPhIgOIygnmhrl8zK4zAAJ8jEfl0skWAUILP2Sg8xr+u5vmIK0Uvzx0HVwn4zJONPiDSd9Qjw+BYui2ZkUz4cYrzGt+w3V5Rl8zzBtRzYppGJ3qqgN+lvqKuDVmWpZ+/gM0Dgw6/Md6fc=
+    on_success: always
+    on_failure: always
